@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Financial Literacy Notebook | FI Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Nunito:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          paper: '#FBF6EA',
+          paper2: '#F3ECDA',
+          ink: '#241F35',
+          pencil: '#6B6580',
+          mblue: '#2F6FED',
+          mgreen: '#1E9E6C',
+          morange: '#FF7A3D',
+          mred: '#E5484D',
+          mpurple: '#8B5CF6',
+          myellow: '#F4B740',
+        },
+        fontFamily: {
+          hand: ['Kalam', 'cursive'],
+          body: ['Nunito', 'sans-serif'],
+          mono: ['"Space Mono"', 'monospace'],
+        },
+      },
+    },
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background-color: #FBF6EA;
+    background-image:
+      radial-gradient(circle, rgba(36,31,53,0.07) 1px, transparent 1.3px);
+    background-size: 22px 22px;
+  }
+
+  /* ---------- hand-drawn wobble border, drawn on ::before so text stays crisp ---------- */
+  .sketch { position: relative; z-index: 0; }
+  .sketch::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    border: 2.5px solid var(--sketch-color, #241F35);
+    border-radius: var(--sketch-radius, 16px);
+    filter: url(#roughen);
+    z-index: -1;
+  }
+  .sketch-flat::before { filter: none; }
+
+  /* ---------- washi tape ---------- */
+  .tape {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-3deg);
+    width: 74px;
+    height: 22px;
+    opacity: 0.75;
+  }
+
+  /* ---------- squiggle underline ---------- */
+  .squiggle-wrap { display: inline-block; position: relative; }
+
+  /* ---------- doodle range sliders ---------- */
+  input[type="range"].doodle-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: repeating-linear-gradient(90deg, #241F35 0 6px, transparent 6px 11px);
+    background-color: transparent;
+    outline: none;
+  }
+  input[type="range"].doodle-range::-webkit-slider-runnable-track {
+    height: 6px;
+    background: repeating-linear-gradient(90deg, #241F35 0 6px, transparent 6px 11px);
+    border-radius: 999px;
+  }
+  input[type="range"].doodle-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    margin-top: -9px;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--thumb, #2F6FED);
+    border: 2.5px solid #241F35;
+    box-shadow: 2px 2px 0 rgba(36,31,53,0.35);
+    cursor: pointer;
+  }
+  input[type="range"].doodle-range::-moz-range-track {
+    height: 6px;
+    background: repeating-linear-gradient(90deg, #241F35 0 6px, transparent 6px 11px);
+    border-radius: 999px;
+  }
+  input[type="range"].doodle-range::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--thumb, #2F6FED);
+    border: 2.5px solid #241F35;
+    box-shadow: 2px 2px 0 rgba(36,31,53,0.35);
+    cursor: pointer;
+  }
+
+  /* ---------- money jar ---------- */
+  .jar {
+    position: relative;
+    width: 130px;
+    height: 180px;
+    border: 3px solid #241F35;
+    border-radius: 12px 12px 34px 34px;
+    background: #fff;
+    overflow: hidden;
+    filter: url(#roughen);
+  }
+  .jar-neck {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 56px;
+    height: 16px;
+    background: #fff;
+    border: 3px solid #241F35;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    filter: url(#roughen);
+  }
+  .jar-fill {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 0%;
+    background: linear-gradient(180deg, #3ED598, #1E9E6C 70%);
+    transition: none;
+  }
+  .jar-fill::before {
+    content: "";
+    position: absolute;
+    top: -6px; left: 0; right: 0; height: 12px;
+    background: repeating-radial-gradient(circle at 8px 0, transparent 0 5px, #1E9E6C 5px 6px);
+    background-size: 16px 12px;
+  }
+
+  /* ---------- badges ---------- */
+  .badge-chip {
+    transition: all .25s ease;
+  }
+  .badge-chip.locked { filter: grayscale(1); opacity: 0.35; }
+
+  .btn-doodle {
+    position: relative;
+    font-family: 'Kalam', cursive;
+    font-weight: 700;
+  }
+
+  .report-line { border-bottom: 2px dashed #C9BFA0; }
+
+  @media print {
+    body { background: #fff; }
+    .no-print { display: none !important; }
+    #report { display: block !important; box-shadow: none !important; }
+  }
+</style>
+</head>
+<body class="text-ink font-body">
+
+<!-- hand-drawn filter definition -->
+<svg width="0" height="0" style="position:absolute">
+  <filter id="roughen" x="-20%" y="-20%" width="140%" height="140%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="2" seed="7" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="5.5"/>
+  </filter>
+</svg>
+
+<div class="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12 relative">
+
+  <!-- scattered doodles -->
+  <div class="pointer-events-none select-none hidden md:block absolute top-4 right-8 text-5xl opacity-10 rotate-12">🪙</div>
+  <div class="pointer-events-none select-none hidden md:block absolute top-40 left-2 text-4xl opacity-10 -rotate-12">☕</div>
+  <div class="pointer-events-none select-none hidden md:block absolute bottom-24 right-4 text-5xl opacity-10 rotate-6">📈</div>
+
+  <!-- ================= HEADER ================= -->
+  <header class="reveal text-center mb-10">
+    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-myellow border-[3px] border-ink font-hand text-3xl font-bold mb-3" style="filter:url(#roughen)">₹</div>
+    <h1 class="font-hand text-4xl md:text-6xl font-bold leading-tight">Financial Literacy Notebook</h1>
+    <svg class="mx-auto -mt-2 mb-2" width="260" height="14" viewBox="0 0 260 14"><path d="M2 8 Q 32 -2, 62 8 T 122 8 T 182 8 T 242 8" stroke="#FF7A3D" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
+    <p class="max-w-xl mx-auto text-pencil font-body text-[15px] md:text-base">Drag the sliders, watch your money jar fill up, and see exactly where every rupee of your income goes — then print your outcome report.</p>
+
+    <div class="flex flex-wrap items-center justify-center gap-3 mt-6 no-print">
+      <button id="showReport" class="btn-doodle bg-mblue text-white px-5 py-2.5 rounded-full border-[2.5px] border-ink shadow-[3px_3px_0_#241F35] hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#241F35] active:translate-y-0 active:shadow-[1px_1px_0_#241F35] transition-all">📋 Preview Report</button>
+      <button id="downloadExcel" class="btn-doodle bg-mgreen text-white px-5 py-2.5 rounded-full border-[2.5px] border-ink shadow-[3px_3px_0_#241F35] hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#241F35] active:translate-y-0 active:shadow-[1px_1px_0_#241F35] transition-all">⬇ Excel</button>
+      <button id="downloadCsv" class="btn-doodle bg-white text-ink px-5 py-2.5 rounded-full border-[2.5px] border-ink shadow-[3px_3px_0_#241F35] hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#241F35] active:translate-y-0 active:shadow-[1px_1px_0_#241F35] transition-all">⬇ CSV</button>
+      <button id="downloadPdf" class="btn-doodle bg-white text-ink px-5 py-2.5 rounded-full border-[2.5px] border-ink shadow-[3px_3px_0_#241F35] hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#241F35] active:translate-y-0 active:shadow-[1px_1px_0_#241F35] transition-all">⬇ PDF</button>
+      <button id="resetBtn" class="btn-doodle bg-white text-mred px-5 py-2.5 rounded-full border-[2.5px] border-ink shadow-[3px_3px_0_#241F35] hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#241F35] active:translate-y-0 active:shadow-[1px_1px_0_#241F35] transition-all">↺ Reset</button>
+    </div>
+
+    <!-- presets -->
+    <div class="flex flex-wrap items-center justify-center gap-2 mt-4 no-print">
+      <span class="text-xs uppercase tracking-wide text-pencil font-bold mr-1">Try a scenario:</span>
+      <button data-preset="frugal" class="preset-btn font-hand text-sm px-3 py-1 rounded-full bg-white border-2 border-ink hover:bg-mgreen hover:text-white transition-colors">🌱 Frugal Saver</button>
+      <button data-preset="balanced" class="preset-btn font-hand text-sm px-3 py-1 rounded-full bg-white border-2 border-ink hover:bg-mblue hover:text-white transition-colors">⚖️ Balanced</button>
+      <button data-preset="spender" class="preset-btn font-hand text-sm px-3 py-1 rounded-full bg-white border-2 border-ink hover:bg-morange hover:text-white transition-colors">🎉 Big Spender</button>
+    </div>
+  </header>
+
+  <!-- ================= HERO: JAR + KEY METRICS ================= -->
+  <section class="reveal grid md:grid-cols-[220px_220px_1fr] gap-5 mb-6">
+    <div class="sketch p-5 flex flex-col items-center justify-center" style="--sketch-radius:22px">
+      <div class="tape bg-myellow"></div>
+      <div class="jar"><div class="jar-neck"></div><div class="jar-fill" id="jarFill"></div></div>
+      <p class="font-hand text-3xl font-bold mt-3" id="heroProgress">0%</p>
+      <p class="text-[11px] uppercase tracking-wide text-pencil font-bold">to financial freedom</p>
+      <div class="flex gap-1.5 mt-3" id="badgeRow"></div>
+    </div>
+
+    <div class="sketch p-5 flex flex-col items-center justify-center" style="--sketch-radius:22px">
+      <div class="tape bg-mpurple"></div>
+      <svg width="140" height="86" viewBox="0 0 140 90">
+        <path d="M10 80 A60 60 0 0 1 130 80" fill="none" stroke="#EFE7D3" stroke-width="14" stroke-linecap="round"/>
+        <path id="healthArc" d="M10 80 A60 60 0 0 1 130 80" fill="none" stroke="#1E9E6C" stroke-width="14" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="188.5"/>
+      </svg>
+      <p class="font-hand text-3xl font-bold -mt-2" id="healthScoreOut">0</p>
+      <p class="text-[11px] uppercase tracking-wide text-pencil font-bold text-center">Financial Health Score</p>
+    </div>
+
+    <div class="grid sm:grid-cols-3 gap-4">
+      <div class="sketch p-5 flex flex-col justify-center" style="--sketch-color:#2F6FED">
+        <span class="text-[11px] uppercase tracking-wide text-pencil font-bold">FI Target (25x spend)</span>
+        <strong class="font-mono text-2xl md:text-3xl mt-1" id="heroFi">₹0</strong>
+      </div>
+      <div class="sketch p-5 flex flex-col justify-center" style="--sketch-color:#1E9E6C">
+        <span class="text-[11px] uppercase tracking-wide text-pencil font-bold">Projected Freedom Age</span>
+        <strong class="font-mono text-2xl md:text-3xl mt-1" id="heroAge">--</strong>
+      </div>
+      <div class="sketch p-5 flex flex-col justify-center" style="--sketch-color:#FF7A3D">
+        <span class="text-[11px] uppercase tracking-wide text-pencil font-bold">Annual Surplus</span>
+        <strong class="font-mono text-2xl md:text-3xl mt-1" id="heroSurplus">₹0</strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MAIN LAYOUT ================= -->
+  <section class="grid lg:grid-cols-[380px_1fr] gap-6">
+
+    <!-- LEFT: controls -->
+    <div class="grid gap-6 content-start">
+      <div class="reveal sketch p-6" style="--sketch-color:#241F35">
+        <div class="tape bg-mblue"></div>
+        <h2 class="font-hand text-2xl font-bold mb-1">Your Profile</h2>
+        <p class="text-xs text-pencil mb-4">A realistic starting point for a young earner in India.</p>
+
+        <div class="mb-4">
+          <label class="flex justify-between text-xs font-bold mb-1.5"><span>Annual gross income</span><output id="incomeOut" class="font-mono text-mblue"></output></label>
+          <input id="income" class="doodle-range" style="--thumb:#2F6FED" type="range" min="300000" max="5000000" step="10000" value="800000">
+        </div>
+        <div class="mb-4">
+          <label class="flex justify-between text-xs font-bold mb-1.5"><span>Current age</span><output id="ageOut" class="font-mono text-mblue"></output></label>
+          <input id="age" class="doodle-range" style="--thumb:#2F6FED" type="range" min="18" max="55" step="1" value="22">
+        </div>
+        <div class="mb-4">
+          <label class="flex justify-between text-xs font-bold mb-1.5"><span>Current savings / net worth</span><output id="savingsOut" class="font-mono text-mblue"></output></label>
+          <input id="savings" class="doodle-range" style="--thumb:#2F6FED" type="range" min="0" max="5000000" step="25000" value="100000">
+        </div>
+        <div class="mb-4">
+          <label class="flex justify-between text-xs font-bold mb-1.5"><span>Expected portfolio return</span><output id="returnOut" class="font-mono text-mgreen"></output></label>
+          <input id="returnRate" class="doodle-range" style="--thumb:#1E9E6C" type="range" min="4" max="15" step="0.5" value="10">
+        </div>
+        <div class="mb-4">
+          <label class="flex justify-between text-xs font-bold mb-1.5"><span>Surplus invested (rest = safe save)</span><output id="investPctOut" class="font-mono text-mgreen"></output></label>
+          <input id="investPct" class="doodle-range" style="--thumb:#1E9E6C" type="range" min="0" max="100" step="5" value="70">
+        </div>
+        <div>
+          <label class="flex justify-between text-xs font-bold mb-1.5"><span>Expected inflation</span><output id="inflationOut" class="font-mono text-morange"></output></label>
+          <input id="inflation" class="doodle-range" style="--thumb:#FF7A3D" type="range" min="0" max="10" step="0.5" value="5">
+        </div>
+      </div>
+
+      <div class="reveal sketch p-6" style="--sketch-color:#241F35">
+        <div class="tape bg-morange"></div>
+        <h2 class="font-hand text-2xl font-bold mb-1">Micro Expenses</h2>
+        <p class="text-xs text-pencil mb-4">Small daily costs become large annual costs.</p>
+        <div class="grid grid-cols-2 gap-3" id="expenseGrid">
+          <!-- filled by markup below -->
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2.5">
+            <label class="flex justify-between text-[11px] font-bold mb-1"><span>☕ Chai/Coffee</span><output id="coffeeOut" class="font-mono"></output></label>
+            <input id="coffee" class="doodle-range" style="--thumb:#F4B740" type="range" min="0" max="300" step="5" value="60">
+          </div>
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2.5">
+            <label class="flex justify-between text-[11px] font-bold mb-1"><span>🚌 Commute</span><output id="commuteOut" class="font-mono"></output></label>
+            <input id="commute" class="doodle-range" style="--thumb:#F4B740" type="range" min="0" max="300" step="5" value="80">
+          </div>
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2.5">
+            <label class="flex justify-between text-[11px] font-bold mb-1"><span>🍱 Lunch outside</span><output id="lunchOut" class="font-mono"></output></label>
+            <input id="lunch" class="doodle-range" style="--thumb:#F4B740" type="range" min="0" max="400" step="10" value="150">
+          </div>
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2.5">
+            <label class="flex justify-between text-[11px] font-bold mb-1"><span>📱 Mobile/Data</span><output id="mobileOut" class="font-mono"></output></label>
+            <input id="mobile" class="doodle-range" style="--thumb:#F4B740" type="range" min="0" max="1200" step="50" value="400">
+          </div>
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2.5">
+            <label class="flex justify-between text-[11px] font-bold mb-1"><span>🎬 OTT</span><output id="ottOut" class="font-mono"></output></label>
+            <input id="ott" class="doodle-range" style="--thumb:#F4B740" type="range" min="0" max="1500" step="50" value="650">
+          </div>
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2.5">
+            <label class="flex justify-between text-[11px] font-bold mb-1"><span>🏋️ Gym</span><output id="gymOut" class="font-mono"></output></label>
+            <input id="gym" class="doodle-range" style="--thumb:#F4B740" type="range" min="0" max="3000" step="100" value="1200">
+          </div>
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2.5">
+            <label class="flex justify-between text-[11px] font-bold mb-1"><span>🛒 Groceries</span><output id="groceryOut" class="font-mono"></output></label>
+            <input id="grocery" class="doodle-range" style="--thumb:#F4B740" type="range" min="0" max="15000" step="500" value="6000">
+          </div>
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2.5">
+            <label class="flex justify-between text-[11px] font-bold mb-1"><span>🏠 Rent/EMI</span><output id="rentOut" class="font-mono"></output></label>
+            <input id="rent" class="doodle-range" style="--thumb:#F4B740" type="range" min="0" max="40000" step="1000" value="15000">
+          </div>
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2.5">
+            <label class="flex justify-between text-[11px] font-bold mb-1"><span>✈️ Vacation/yr</span><output id="vacationOut" class="font-mono"></output></label>
+            <input id="vacation" class="doodle-range" style="--thumb:#F4B740" type="range" min="0" max="500000" step="5000" value="50000">
+          </div>
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2.5">
+            <label class="flex justify-between text-[11px] font-bold mb-1"><span>🛡️ Insurance/yr</span><output id="insuranceOut" class="font-mono"></output></label>
+            <input id="insurance" class="doodle-range" style="--thumb:#F4B740" type="range" min="0" max="100000" step="2000" value="25000">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: outputs -->
+    <div class="grid gap-6 content-start">
+
+      <div class="reveal grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="sketch p-4 rotate-[-0.6deg]" style="--sketch-color:#E5484D">
+          <span class="text-[10px] uppercase tracking-wide text-pencil font-bold">Net Annual Income</span>
+          <strong class="font-mono text-lg md:text-xl block mt-1" id="netIncome">₹0</strong>
+          <small class="text-[10px] text-pencil">after tax</small>
+        </div>
+        <div class="sketch p-4 rotate-[0.6deg]" style="--sketch-color:#FF7A3D">
+          <span class="text-[10px] uppercase tracking-wide text-pencil font-bold">Annual Spending</span>
+          <strong class="font-mono text-lg md:text-xl block mt-1" id="annualSpend">₹0</strong>
+          <small class="text-[10px] text-pencil">daily + monthly + yearly</small>
+        </div>
+        <div class="sketch p-4 rotate-[-0.4deg]" style="--sketch-color:#8B5CF6">
+          <span class="text-[10px] uppercase tracking-wide text-pencil font-bold">Annual Surplus</span>
+          <strong class="font-mono text-lg md:text-xl block mt-1" id="annualSurplus">₹0</strong>
+          <small class="text-[10px] text-pencil">save + invest pool</small>
+        </div>
+        <div class="sketch p-4 rotate-[0.5deg]" style="--sketch-color:#E5484D">
+          <span class="text-[10px] uppercase tracking-wide text-pencil font-bold">Effective Tax Rate</span>
+          <strong class="font-mono text-lg md:text-xl block mt-1" id="effTaxRate">0%</strong>
+          <small class="text-[10px] text-pencil">tax ÷ gross income</small>
+        </div>
+        <div class="sketch p-4 rotate-[-0.5deg]" style="--sketch-color:#1E9E6C">
+          <span class="text-[10px] uppercase tracking-wide text-pencil font-bold">Savings Rate</span>
+          <strong class="font-mono text-lg md:text-xl block mt-1" id="savingsRate">0%</strong>
+          <small class="text-[10px] text-pencil">surplus ÷ net income</small>
+        </div>
+        <div class="sketch p-4 rotate-[0.4deg]" style="--sketch-color:#2F6FED">
+          <span class="text-[10px] uppercase tracking-wide text-pencil font-bold">Rule of 72</span>
+          <strong class="font-mono text-lg md:text-xl block mt-1" id="rule72">0 yrs</strong>
+          <small class="text-[10px] text-pencil">money-doubling time</small>
+        </div>
+        <div class="sketch p-4 rotate-[-0.3deg]" style="--sketch-color:#8B5CF6">
+          <span class="text-[10px] uppercase tracking-wide text-pencil font-bold">Emergency Fund</span>
+          <strong class="font-mono text-lg md:text-xl block mt-1" id="emergencyFund">0 mo</strong>
+          <small class="text-[10px] text-pencil">savings ÷ monthly spend</small>
+        </div>
+        <div class="sketch p-4 rotate-[0.3deg]" style="--sketch-color:#FF7A3D">
+          <span class="text-[10px] uppercase tracking-wide text-pencil font-bold">Real Freedom Age</span>
+          <strong class="font-mono text-lg md:text-xl block mt-1" id="realAge">--</strong>
+          <small class="text-[10px] text-pencil">after inflation</small>
+        </div>
+      </div>
+
+      <div class="reveal sketch p-6" style="--sketch-color:#241F35">
+        <div class="tape bg-mpurple"></div>
+        <h2 class="font-hand text-2xl font-bold mb-1">Where Your Rupee Goes</h2>
+        <p class="text-xs text-pencil mb-3">Gross income split into tax, spending, saving and investing.</p>
+        <div class="flex h-9 rounded-full overflow-hidden border-2 border-ink">
+          <div id="taxBar" class="bg-mred flex items-center justify-center text-white text-[10px] font-bold">Tax</div>
+          <div id="spendBar" class="bg-morange flex items-center justify-center text-white text-[10px] font-bold">Spend</div>
+          <div id="saveBar" class="bg-mpurple flex items-center justify-center text-white text-[10px] font-bold">Save</div>
+          <div id="investBar" class="bg-mgreen flex items-center justify-center text-white text-[10px] font-bold">Invest</div>
+        </div>
+      </div>
+
+      <div class="reveal grid md:grid-cols-[1.4fr_1fr] gap-6">
+        <div class="sketch p-6" style="--sketch-color:#241F35">
+          <h2 class="font-hand text-xl font-bold mb-3">Wealth Projection</h2>
+          <div class="h-64"><canvas id="wealthChart"></canvas></div>
+        </div>
+        <div class="sketch p-6" style="--sketch-color:#241F35">
+          <h2 class="font-hand text-xl font-bold mb-3">Outcome Mix</h2>
+          <div class="h-64"><canvas id="mixChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="reveal grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="sketch sketch-flat p-4 bg-white rounded-2xl border-2 border-dashed border-ink" style="--sketch-color:transparent">
+          <strong class="font-hand text-base">💡 FI Number</strong>
+          <p class="text-xs text-pencil mt-1.5" id="insightFi"></p>
+        </div>
+        <div class="sketch sketch-flat p-4 bg-white rounded-2xl border-2 border-dashed border-ink" style="--sketch-color:transparent">
+          <strong class="font-hand text-base">💰 Surplus Habit</strong>
+          <p class="text-xs text-pencil mt-1.5" id="insightSurplus"></p>
+        </div>
+        <div class="sketch sketch-flat p-4 bg-white rounded-2xl border-2 border-dashed border-ink" style="--sketch-color:transparent">
+          <strong class="font-hand text-base">☕ Micro Expense Lesson</strong>
+          <p class="text-xs text-pencil mt-1.5" id="insightMicro"></p>
+        </div>
+        <div class="sketch sketch-flat p-4 bg-white rounded-2xl border-2 border-dashed border-ink" style="--sketch-color:transparent">
+          <strong class="font-hand text-base">🛡️ Safety Net</strong>
+          <p class="text-xs text-pencil mt-1.5" id="insightSafety"></p>
+        </div>
+      </div>
+
+      <div class="reveal sketch sketch-flat p-6 bg-white rounded-2xl border-2 border-dashed border-ink" style="--sketch-color:transparent">
+        <h2 class="font-hand text-2xl font-bold mb-3">📖 Glossary — for your viva</h2>
+        <div class="grid sm:grid-cols-2 gap-x-8 gap-y-3 text-xs text-pencil">
+          <p><strong class="text-ink">FI Number</strong> — the corpus you need so that withdrawing 4%/year covers your annual spending forever. Estimated as 25 × annual spending.</p>
+          <p><strong class="text-ink">Rule of 72</strong> — divide 72 by your annual return rate to get a quick estimate of how many years it takes your money to double.</p>
+          <p><strong class="text-ink">Effective Tax Rate</strong> — total tax paid as a percentage of gross income (different from your tax slab rate, which only applies to the last rupee earned).</p>
+          <p><strong class="text-ink">Savings Rate</strong> — the share of your take-home income you actually save or invest, the single biggest driver of how fast you reach FI.</p>
+          <p><strong class="text-ink">Real vs Nominal Return</strong> — nominal return is the raw growth rate; real return subtracts inflation to show growth in today's purchasing power.</p>
+          <p><strong class="text-ink">Emergency Fund</strong> — how many months of expenses your current savings could cover if income stopped; 3–6 months is a common safety target.</p>
+          <p><strong class="text-ink">Financial Health Score</strong> — a 0–100 composite of savings rate, emergency fund coverage, and how much of your surplus is invested for growth.</p>
+          <p><strong class="text-ink">Compound Growth</strong> — each year's investment gains are added to the principal, so future gains are earned on a larger base — the engine behind the wealth chart.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= REPORT ================= -->
+  <section id="report" class="hidden mt-8 bg-white border-2 border-ink rounded-2xl p-6 md:p-10">
+    <div class="flex justify-between items-start border-b-2 border-dashed border-ink pb-4 mb-4">
+      <div>
+        <h2 class="font-hand text-3xl font-bold">Financial Literacy Outcome Report</h2>
+        <p class="text-xs text-pencil font-mono mt-1" id="reportDate"></p>
+      </div>
+      <button id="closeReport" class="no-print btn-doodle bg-white px-4 py-2 rounded-full border-2 border-ink">Close ✕</button>
+    </div>
+    <div class="grid md:grid-cols-2 gap-x-8 font-mono text-sm" id="reportGrid"></div>
+    <div class="h-64 mt-8"><canvas id="reportChart"></canvas></div>
+  </section>
+
+  <footer class="text-center text-[11px] text-pencil mt-10 no-print">B.Tech Micro Project — Financial Literacy Simulator · figures are simplified estimates, not financial advice.</footer>
+</div>
+
+<script type="module">
+import { animate, stagger } from "https://cdn.jsdelivr.net/npm/motion@11.11.13/+esm";
+
+const ids = ["income","age","savings","returnRate","investPct","inflation","coffee","commute","lunch","mobile","ott","gym","grocery","rent","vacation","insurance"];
+const el = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
+const outEls = {};
+["incomeOut","ageOut","savingsOut","returnOut","investPctOut","inflationOut","coffeeOut","commuteOut","lunchOut","mobileOut","ottOut","gymOut","groceryOut","rentOut","vacationOut","insuranceOut",
+ "heroFi","heroAge","heroProgress","heroSurplus","netIncome","annualSpend","annualSurplus","effTaxRate","savingsRate","rule72","emergencyFund","realAge","healthScoreOut",
+ "insightFi","insightSurplus","insightMicro","insightSafety","reportGrid","reportDate"].forEach(id => outEls[id] = document.getElementById(id));
+
+const taxBar = document.getElementById("taxBar"), spendBar = document.getElementById("spendBar"), saveBar = document.getElementById("saveBar"), investBar = document.getElementById("investBar");
+const jarFill = document.getElementById("jarFill");
+const healthArc = document.getElementById("healthArc");
+const badgeRow = document.getElementById("badgeRow");
+const reportSection = document.getElementById("report");
+const HEALTH_ARC_LEN = 188.5;
+
+let wealthChart, mixChart, reportChart, latest;
+let prevAnim = { progress: 0, net: 0, spend: 0, surplus: 0, health: 0 };
+
+function money(n) {
+  if (n >= 10000000) return "₹" + (n / 10000000).toFixed(2) + " Cr";
+  if (n >= 100000) return "₹" + (n / 100000).toFixed(1) + " L";
+  if (n >= 1000) return "₹" + (n / 1000).toFixed(1) + " K";
+  return "₹" + Math.round(n).toLocaleString("en-IN");
+}
+function fullMoney(n) { return "₹" + Math.round(n).toLocaleString("en-IN"); }
+function val(id) { return Number(el[id].value); }
+function countTo(node, from, to, fmt) {
+  animate(from, to, { duration: 0.5, ease: "easeOut", onUpdate: v => node.textContent = fmt(v) });
+}
+
+function taxNewRegime(gross) {
+  const taxable = Math.max(0, gross - 75000); // simplified standard deduction
+  if (taxable <= 700000) return 0; // Section 87A rebate zone
+  const slabs = [[300000,0],[300000,0.05],[300000,0.10],[300000,0.15],[300000,0.20],[Infinity,0.30]];
+  let remaining = taxable, tax = 0;
+  for (const [limit, rate] of slabs) {
+    const amount = Math.min(remaining, limit);
+    tax += amount * rate;
+    remaining -= amount;
+    if (remaining <= 0) break;
+  }
+  return tax * 1.04; // 4% health & education cess
+}
+
+const BADGES = [
+  { pct: 10, icon: "🌱", label: "Started" },
+  { pct: 25, icon: "🥉", label: "Quarter Way" },
+  { pct: 50, icon: "🥈", label: "Halfway Hero" },
+  { pct: 75, icon: "🥇", label: "Almost There" },
+  { pct: 100, icon: "🏆", label: "FI Achieved" },
+];
+
+function renderBadges(progress) {
+  badgeRow.innerHTML = BADGES.map(b => `
+    <span title="${b.label}" class="badge-chip text-xl ${progress >= b.pct ? "" : "locked"}">${b.icon}</span>
+  `).join("");
+}
+
+function compute() {
+  const gross = val("income"), age = val("age"), savings = val("savings"), retPct = val("returnRate"), investPct = val("investPct"), inflation = val("inflation");
+  const daily = val("coffee") + val("commute") + val("lunch");
+  const monthly = val("mobile") + val("ott") + val("gym") + val("grocery") + val("rent");
+  const annualSpend = daily * 365 + monthly * 12 + val("vacation") + val("insurance");
+  const tax = taxNewRegime(gross);
+  const net = gross - tax;
+  const surplus = Math.max(0, net - annualSpend);
+  const invest = surplus * investPct / 100;
+  const safeSave = surplus - invest;
+  const fiTarget = annualSpend * 25;
+  const rule72 = retPct > 0 ? 72 / retPct : 0;
+  const effTax = gross > 0 ? tax / gross * 100 : 0;
+  const savingsRate = net > 0 ? surplus / net * 100 : 0;
+  const realReturn = Math.max(0.1, retPct - inflation);
+  const emergencyMonths = monthly > 0 || annualSpend > 0 ? savings / (annualSpend / 12) : 0;
+  const healthScore = Math.max(0, Math.min(100,
+    0.4 * Math.min(savingsRate / 50 * 100, 100) +
+    0.3 * Math.min(emergencyMonths / 6 * 100, 100) +
+    0.3 * investPct
+  ));
+
+  let wealth = savings, freedomAge = null;
+  let realWealth = savings, realFreedomAge = null;
+  const labels = [], wealthData = [], targetData = [];
+  for (let a = age; a <= 85; a++) {
+    if (a > age) {
+      wealth = wealth * (1 + retPct / 100) + invest + safeSave;
+      realWealth = realWealth * (1 + realReturn / 100) + invest + safeSave;
+    }
+    labels.push(a); wealthData.push(Math.round(wealth)); targetData.push(fiTarget);
+    if (!freedomAge && wealth >= fiTarget && a > age) freedomAge = a;
+    if (!realFreedomAge && realWealth >= fiTarget && a > age) realFreedomAge = a;
+  }
+  const progress = fiTarget ? Math.min(100, wealth / fiTarget * 100) : 100;
+
+  latest = { gross, age, savings, retPct, investPct, inflation, realReturn, daily, monthly, annualSpend, tax, net, surplus, invest, safeSave, fiTarget, rule72, wealth, freedomAge: freedomAge || "85+", realFreedomAge: realFreedomAge || "85+", progress, effTax, savingsRate, emergencyMonths, healthScore, labels, wealthData, targetData };
+
+  // slider readouts
+  outEls.incomeOut.textContent = fullMoney(gross); outEls.ageOut.textContent = age; outEls.savingsOut.textContent = fullMoney(savings);
+  outEls.returnOut.textContent = retPct.toFixed(1) + "%"; outEls.investPctOut.textContent = investPct + "%"; outEls.inflationOut.textContent = inflation.toFixed(1) + "%";
+  ["coffee","commute","lunch","mobile","ott","gym","grocery","rent","vacation","insurance"].forEach(id => outEls[id + "Out"].textContent = money(val(id)));
+
+  // hero + kpis (animated)
+  outEls.heroFi.textContent = money(fiTarget);
+  outEls.heroAge.textContent = latest.freedomAge;
+  outEls.heroSurplus.textContent = money(surplus);
+  countTo(outEls.heroProgress, prevAnim.progress, progress, v => v.toFixed(1) + "%");
+  countTo(outEls.netIncome, prevAnim.net, net, v => money(v));
+  countTo(outEls.annualSpend, prevAnim.spend, annualSpend, v => money(v));
+  countTo(outEls.annualSurplus, prevAnim.surplus, surplus, v => money(v));
+  outEls.effTaxRate.textContent = effTax.toFixed(1) + "%";
+  outEls.savingsRate.textContent = savingsRate.toFixed(1) + "%";
+  outEls.rule72.textContent = rule72.toFixed(1) + " yrs";
+  outEls.emergencyFund.textContent = emergencyMonths.toFixed(1) + " mo";
+  outEls.realAge.textContent = latest.realFreedomAge;
+
+  // health score gauge
+  countTo(outEls.healthScoreOut, prevAnim.health, healthScore, v => Math.round(v));
+  prevAnim = { progress, net, spend: annualSpend, surplus, health: healthScore };
+  const arcColor = healthScore >= 70 ? "#1E9E6C" : healthScore >= 40 ? "#F4B740" : "#E5484D";
+  healthArc.setAttribute("stroke", arcColor);
+  animate(healthArc, { strokeDashoffset: HEALTH_ARC_LEN * (1 - healthScore / 100) }, { duration: 0.6, ease: "easeOut" });
+
+  // income split bar
+  const splitTotal = Math.max(gross, 1);
+  [[taxBar, tax], [spendBar, annualSpend], [saveBar, safeSave], [investBar, invest]].forEach(([node, amount]) => {
+    node.style.width = Math.max(7, Math.min(100, amount / splitTotal * 100)) + "%";
+  });
+
+  // jar fill
+  animate(jarFill, { height: progress + "%" }, { duration: 0.6, ease: "easeOut" });
+  renderBadges(progress);
+
+  // insights
+  outEls.insightFi.textContent = `Your FI number is ${fullMoney(fiTarget)} (25x spending). At ${inflation.toFixed(1)}% inflation, you'd reach it around age ${latest.realFreedomAge} in today's purchasing power — later than the nominal age ${latest.freedomAge}.`;
+  outEls.insightSurplus.textContent = surplus > 0 ? `You can invest ${fullMoney(invest)} and safely save ${fullMoney(safeSave)} every year.` : "Expenses exceed post-tax income right now — trim spending or grow income to build a surplus.";
+  outEls.insightMicro.textContent = `Your daily coffee, commute and lunch habits alone cost about ${fullMoney(daily * 365)} a year.`;
+  outEls.insightSafety.textContent = emergencyMonths >= 6 ? `Your savings cover ${emergencyMonths.toFixed(1)} months of expenses — a solid emergency cushion.` : `Your savings cover only ${emergencyMonths.toFixed(1)} months of expenses. Aim for 3–6 months before investing aggressively.`;
+
+  drawCharts();
+  buildReport();
+}
+
+function chartConfig() {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { boxWidth: 12, font: { family: "Nunito", weight: "bold" } } } },
+    scales: {
+      y: { ticks: { callback: v => money(v), font: { family: "Space Mono", size: 10 } }, grid: { color: "#EFE7D3" } },
+      x: { grid: { display: false }, ticks: { font: { family: "Space Mono", size: 10 } } }
+    }
+  };
+}
+
+function drawCharts() {
+  if (wealthChart) wealthChart.destroy();
+  if (mixChart) mixChart.destroy();
+
+  wealthChart = new Chart(document.getElementById("wealthChart"), {
+    type: "line",
+    data: {
+      labels: latest.labels,
+      datasets: [
+        { label: "Projected Net Worth", data: latest.wealthData, borderColor: "#2F6FED", backgroundColor: "rgba(47,111,237,.10)", fill: true, tension: 0.3, pointRadius: 0, borderWidth: 3 },
+        { label: "FI Target", data: latest.targetData, borderColor: "#E5484D", borderDash: [7, 5], pointRadius: 0, borderWidth: 2 }
+      ]
+    },
+    options: chartConfig()
+  });
+
+  mixChart = new Chart(document.getElementById("mixChart"), {
+    type: "doughnut",
+    data: {
+      labels: ["Tax", "Spend", "Safe Save", "Invest"],
+      datasets: [{ data: [latest.tax, latest.annualSpend, latest.safeSave, latest.invest], backgroundColor: ["#E5484D", "#FF7A3D", "#8B5CF6", "#1E9E6C"], borderColor: "#241F35", borderWidth: 2 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom", labels: { font: { family: "Nunito", weight: "bold" } } } }, cutout: "62%" }
+  });
+}
+
+function reportRows() {
+  return [
+    ["Annual gross income", fullMoney(latest.gross)], ["Estimated tax (new regime + cess)", fullMoney(latest.tax)], ["Net annual income", fullMoney(latest.net)],
+    ["Annual spending", fullMoney(latest.annualSpend)], ["Annual surplus", fullMoney(latest.surplus)], ["Annual investment", fullMoney(latest.invest)],
+    ["Annual safe saving", fullMoney(latest.safeSave)], ["Effective tax rate", latest.effTax.toFixed(1) + "%"], ["Savings rate", latest.savingsRate.toFixed(1) + "%"],
+    ["FI target (25x spending)", fullMoney(latest.fiTarget)], ["Projected freedom age (nominal)", String(latest.freedomAge)], ["Projected freedom age (real, after inflation)", String(latest.realFreedomAge)],
+    ["Projected wealth at 85", fullMoney(latest.wealth)], ["Progress to FI today", latest.progress.toFixed(1) + "%"], ["Rule of 72 (doubling time)", latest.rule72.toFixed(1) + " years"],
+    ["Emergency fund coverage", latest.emergencyMonths.toFixed(1) + " months"], ["Financial Health Score", Math.round(latest.healthScore) + " / 100"]
+  ];
+}
+
+function buildReport() {
+  outEls.reportDate.textContent = "Generated on " + new Date().toLocaleString("en-IN");
+  outEls.reportGrid.innerHTML = reportRows().map(([a, b]) => `<div class="flex justify-between gap-3 py-2 report-line"><span class="text-pencil">${a}</span><strong>${b}</strong></div>`).join("");
+  if (reportChart) reportChart.destroy();
+  reportChart = new Chart(document.getElementById("reportChart"), {
+    type: "bar",
+    data: { labels: ["Tax", "Spend", "Save", "Invest"], datasets: [{ label: "Annual Amount", data: [latest.tax, latest.annualSpend, latest.safeSave, latest.invest], backgroundColor: ["#E5484D", "#FF7A3D", "#8B5CF6", "#1E9E6C"], borderColor: "#241F35", borderWidth: 2 }] },
+    options: chartConfig()
+  });
+}
+
+function download(filename, mime, content) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
+}
+function exportCsv() {
+  const rows = [["Metric", "Value"], ...reportRows()];
+  download("financial-literacy-outcome.csv", "text/csv", rows.map(r => r.map(x => `"${String(x).replaceAll('"', '""')}"`).join(",")).join("\n"));
+}
+function exportExcel() {
+  const rows = reportRows().map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join("");
+  const html = `<html><head><meta charset="UTF-8"><style>body{font-family:Arial}h1{color:#2F6FED}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccd6e3;padding:10px}th{background:#e8eef8}</style></head><body><h1>Financial Literacy Outcome Report</h1><p>${new Date().toLocaleString("en-IN")}</p><table><tr><th>Metric</th><th>Value</th></tr>${rows}</table></body></html>`;
+  download("financial-literacy-outcome.xls", "application/vnd.ms-excel", html);
+}
+function exportPdf() {
+  reportSection.classList.remove("hidden");
+  setTimeout(() => window.print(), 150);
+}
+
+function applyPreset(name) {
+  const presets = {
+    frugal:   { coffee: 20, commute: 40, lunch: 60, mobile: 250, ott: 0, gym: 0, grocery: 4000, rent: 8000, vacation: 15000, insurance: 15000, investPct: 90 },
+    balanced: { coffee: 60, commute: 80, lunch: 150, mobile: 400, ott: 650, gym: 1200, grocery: 6000, rent: 15000, vacation: 50000, insurance: 25000, investPct: 70 },
+    spender:  { coffee: 150, commute: 150, lunch: 300, mobile: 800, ott: 1200, gym: 2500, grocery: 10000, rent: 30000, vacation: 200000, insurance: 40000, investPct: 30 },
+  };
+  const p = presets[name];
+  if (!p) return;
+  Object.entries(p).forEach(([id, v]) => { if (el[id]) el[id].value = v; });
+  compute();
+  animate(".layout-panel", { rotate: [0, -1, 1, 0] }, { duration: 0.4 });
+}
+
+document.getElementById("showReport").addEventListener("click", () => {
+  reportSection.classList.toggle("hidden");
+  if (!reportSection.classList.contains("hidden")) {
+    reportSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    animate(reportSection, { opacity: [0, 1], y: [16, 0] }, { duration: 0.4 });
+  }
+});
+document.getElementById("closeReport").addEventListener("click", () => reportSection.classList.add("hidden"));
+document.getElementById("downloadCsv").addEventListener("click", exportCsv);
+document.getElementById("downloadExcel").addEventListener("click", exportExcel);
+document.getElementById("downloadPdf").addEventListener("click", exportPdf);
+document.getElementById("resetBtn").addEventListener("click", () => {
+  ids.forEach(id => el[id].value = el[id].defaultValue);
+  compute();
+  animate("header", { rotate: [0, -1.5, 1.5, 0] }, { duration: 0.5 });
+});
+document.querySelectorAll(".preset-btn").forEach(btn => btn.addEventListener("click", () => applyPreset(btn.dataset.preset)));
+ids.forEach(id => el[id].addEventListener("input", compute));
+
+compute();
+animate(".reveal", { opacity: [0, 1], y: [18, 0] }, { delay: stagger(0.06), duration: 0.5, ease: "easeOut" });
+</script>
+</body>
+</html>
