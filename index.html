@@ -424,7 +424,7 @@
           <p class="text-xs text-pencil mt-1.5" id="insightSafety"></p>
         </div>
       </div>
-
+<!-- 
       <div class="reveal sketch sketch-flat p-6 bg-white rounded-2xl border-2 border-dashed border-ink" style="--sketch-color:transparent">
         <h2 class="font-hand text-2xl font-bold mb-3">📖 Glossary — for your viva</h2>
         <div class="grid sm:grid-cols-2 gap-x-8 gap-y-3 text-xs text-pencil">
@@ -438,6 +438,74 @@
           <p><strong class="text-ink">Compound Growth</strong> — each year's investment gains are added to the principal, so future gains are earned on a larger base — the engine behind the wealth chart.</p>
         </div>
       </div>
+    </div> -->
+  </section>
+
+  <!-- ================= EXTRA FINANCE TOOLS ================= -->
+  <section class="reveal mt-8">
+    <div class="text-center mb-6">
+      <h2 class="font-hand text-4xl font-bold">💰 Extra Finance Tools</h2>
+      <p class="text-pencil text-sm mt-1">Four bonus calculators every financially literate person should know how to use.</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+
+      <!-- SIP / Lump Sum Calculator -->
+      <div class="sketch p-6" style="--sketch-color:#2F6FED">
+        <div class="tape bg-mblue"></div>
+        <h3 class="font-hand text-2xl font-bold mb-1">📈 SIP & Lump Sum Growth</h3>
+        <p class="text-xs text-pencil mb-4">See how a monthly SIP plus a one-time lump sum grows over time.</p>
+        <div class="mb-3"><label class="flex justify-between text-xs font-bold mb-1.5"><span>Monthly SIP</span><output id="sipAmountOut" class="font-mono text-mblue"></output></label><input id="sipAmount" class="doodle-range" style="--thumb:#2F6FED" type="range" min="0" max="50000" step="500" value="5000"></div>
+        <div class="mb-3"><label class="flex justify-between text-xs font-bold mb-1.5"><span>One-time lump sum</span><output id="sipLumpOut" class="font-mono text-mblue"></output></label><input id="sipLump" class="doodle-range" style="--thumb:#2F6FED" type="range" min="0" max="1000000" step="10000" value="50000"></div>
+        <div class="mb-3"><label class="flex justify-between text-xs font-bold mb-1.5"><span>Investment horizon</span><output id="sipYearsOut" class="font-mono text-mblue"></output></label><input id="sipYears" class="doodle-range" style="--thumb:#2F6FED" type="range" min="1" max="40" step="1" value="15"></div>
+        <div><label class="flex justify-between text-xs font-bold mb-1.5"><span>Expected annual return</span><output id="sipReturnOut" class="font-mono text-mblue"></output></label><input id="sipReturn" class="doodle-range" style="--thumb:#2F6FED" type="range" min="4" max="20" step="0.5" value="12"></div>
+        <div class="grid grid-cols-3 gap-2 mt-4 text-center">
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2"><span class="text-[10px] uppercase text-pencil font-bold">Invested</span><strong class="font-mono text-sm block" id="sipInvested">₹0</strong></div>
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2"><span class="text-[10px] uppercase text-pencil font-bold">Gains</span><strong class="font-mono text-sm block text-mgreen" id="sipGains">₹0</strong></div>
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2"><span class="text-[10px] uppercase text-pencil font-bold">Maturity</span><strong class="font-mono text-sm block text-mblue" id="sipMaturity">₹0</strong></div>
+        </div>
+      </div>
+
+      <!-- Loan / EMI Calculator -->
+      <div class="sketch p-6" style="--sketch-color:#E5484D">
+        <div class="tape bg-mred"></div>
+        <h3 class="font-hand text-2xl font-bold mb-1">🏦 Loan / EMI Calculator</h3>
+        <p class="text-xs text-pencil mb-4">Know your monthly instalment before you borrow.</p>
+        <div class="mb-3"><label class="flex justify-between text-xs font-bold mb-1.5"><span>Loan amount</span><output id="loanAmountOut" class="font-mono text-mred"></output></label><input id="loanAmount" class="doodle-range" style="--thumb:#E5484D" type="range" min="10000" max="5000000" step="10000" value="500000"></div>
+        <div class="mb-3"><label class="flex justify-between text-xs font-bold mb-1.5"><span>Interest rate (annual)</span><output id="loanRateOut" class="font-mono text-mred"></output></label><input id="loanRate" class="doodle-range" style="--thumb:#E5484D" type="range" min="4" max="20" step="0.25" value="9">
+        </div>
+        <div><label class="flex justify-between text-xs font-bold mb-1.5"><span>Tenure</span><output id="loanYearsOut" class="font-mono text-mred"></output></label><input id="loanYears" class="doodle-range" style="--thumb:#E5484D" type="range" min="1" max="30" step="1" value="5"></div>
+        <div class="grid grid-cols-3 gap-2 mt-4 text-center">
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2"><span class="text-[10px] uppercase text-pencil font-bold">Monthly EMI</span><strong class="font-mono text-sm block" id="loanEmi">₹0</strong></div>
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2"><span class="text-[10px] uppercase text-pencil font-bold">Total Interest</span><strong class="font-mono text-sm block text-mred" id="loanInterest">₹0</strong></div>
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2"><span class="text-[10px] uppercase text-pencil font-bold">Total Payable</span><strong class="font-mono text-sm block" id="loanTotal">₹0</strong></div>
+        </div>
+      </div>
+
+      <!-- Goal-Based Savings Planner -->
+      <div class="sketch p-6" style="--sketch-color:#1E9E6C">
+        <div class="tape bg-mgreen"></div>
+        <h3 class="font-hand text-2xl font-bold mb-1">🎯 Goal-Based Savings Planner</h3>
+        <p class="text-xs text-pencil mb-4">Work backwards from a goal to a monthly saving target.</p>
+        <div class="mb-3"><label class="flex justify-between text-xs font-bold mb-1.5"><span>Goal amount</span><output id="goalAmountOut" class="font-mono text-mgreen"></output></label><input id="goalAmount" class="doodle-range" style="--thumb:#1E9E6C" type="range" min="10000" max="5000000" step="10000" value="200000"></div>
+        <div class="mb-3"><label class="flex justify-between text-xs font-bold mb-1.5"><span>Time to achieve</span><output id="goalYearsOut" class="font-mono text-mgreen"></output></label><input id="goalYears" class="doodle-range" style="--thumb:#1E9E6C" type="range" min="1" max="30" step="1" value="5"></div>
+        <div><label class="flex justify-between text-xs font-bold mb-1.5"><span>Expected annual return</span><output id="goalReturnOut" class="font-mono text-mgreen"></output></label><input id="goalReturn" class="doodle-range" style="--thumb:#1E9E6C" type="range" min="0" max="20" step="0.5" value="10"></div>
+        <div class="grid grid-cols-2 gap-2 mt-4 text-center">
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2"><span class="text-[10px] uppercase text-pencil font-bold">Save Monthly</span><strong class="font-mono text-base block text-mgreen" id="goalMonthly">₹0</strong></div>
+          <div class="border-2 border-dashed border-[#C9BFA0] rounded-xl p-2"><span class="text-[10px] uppercase text-pencil font-bold">Total You Invest</span><strong class="font-mono text-base block" id="goalInvested">₹0</strong></div>
+        </div>
+      </div>
+
+      <!-- Old vs New Tax Regime -->
+      <div class="sketch p-6" style="--sketch-color:#8B5CF6">
+        <div class="tape bg-mpurple"></div>
+        <h3 class="font-hand text-2xl font-bold mb-1">⚖️ Old vs New Tax Regime</h3>
+        <p class="text-xs text-pencil mb-4">Uses your Annual Income from the profile above. Adjust 80C investments (old regime only).</p>
+        <div class="mb-4"><label class="flex justify-between text-xs font-bold mb-1.5"><span>Section 80C investments (old regime)</span><output id="taxDeductOut" class="font-mono text-mpurple"></output></label><input id="taxDeduct" class="doodle-range" style="--thumb:#8B5CF6" type="range" min="0" max="150000" step="5000" value="100000"></div>
+        <div class="h-40"><canvas id="regimeChart"></canvas></div>
+        <p class="text-xs text-pencil mt-3" id="regimeVerdict"></p>
+      </div>
+
     </div>
   </section>
 
@@ -493,6 +561,20 @@ function taxNewRegime(gross) {
   const taxable = Math.max(0, gross - 75000); // simplified standard deduction
   if (taxable <= 700000) return 0; // Section 87A rebate zone
   const slabs = [[300000,0],[300000,0.05],[300000,0.10],[300000,0.15],[300000,0.20],[Infinity,0.30]];
+  let remaining = taxable, tax = 0;
+  for (const [limit, rate] of slabs) {
+    const amount = Math.min(remaining, limit);
+    tax += amount * rate;
+    remaining -= amount;
+    if (remaining <= 0) break;
+  }
+  return tax * 1.04; // 4% health & education cess
+}
+
+function taxOldRegime(gross, deduction80c) {
+  const taxable = Math.max(0, gross - 50000 - Math.min(deduction80c, 150000)); // std deduction + 80C
+  if (taxable <= 500000) return 0; // Section 87A rebate zone (old regime)
+  const slabs = [[250000,0],[250000,0.05],[500000,0.20],[Infinity,0.30]];
   let remaining = taxable, tax = 0;
   for (const [limit, rate] of slabs) {
     const amount = Math.min(remaining, limit);
@@ -691,6 +773,90 @@ function applyPreset(name) {
   compute();
   animate(".layout-panel", { rotate: [0, -1, 1, 0] }, { duration: 0.4 });
 }
+
+/* ---------------- BONUS TOOL: SIP & Lump Sum ---------------- */
+const sipIds = ["sipAmount", "sipLump", "sipYears", "sipReturn"];
+const sipEl = Object.fromEntries(sipIds.map(id => [id, document.getElementById(id)]));
+function computeSip() {
+  const monthly = Number(sipEl.sipAmount.value), lump = Number(sipEl.sipLump.value), years = Number(sipEl.sipYears.value), retPct = Number(sipEl.sipReturn.value);
+  document.getElementById("sipAmountOut").textContent = fullMoney(monthly) + "/mo";
+  document.getElementById("sipLumpOut").textContent = fullMoney(lump);
+  document.getElementById("sipYearsOut").textContent = years + " yrs";
+  document.getElementById("sipReturnOut").textContent = retPct.toFixed(1) + "%";
+
+  const n = years * 12, r = retPct / 100 / 12;
+  const sipFv = r > 0 ? monthly * ((Math.pow(1 + r, n) - 1) / r) * (1 + r) : monthly * n;
+  const lumpFv = lump * Math.pow(1 + retPct / 100, years);
+  const maturity = sipFv + lumpFv;
+  const invested = monthly * n + lump;
+  const gains = Math.max(0, maturity - invested);
+
+  document.getElementById("sipInvested").textContent = money(invested);
+  document.getElementById("sipGains").textContent = money(gains);
+  document.getElementById("sipMaturity").textContent = money(maturity);
+}
+sipIds.forEach(id => sipEl[id].addEventListener("input", computeSip));
+
+/* ---------------- BONUS TOOL: Loan / EMI ---------------- */
+const loanIds = ["loanAmount", "loanRate", "loanYears"];
+const loanEl = Object.fromEntries(loanIds.map(id => [id, document.getElementById(id)]));
+function computeLoan() {
+  const P = Number(loanEl.loanAmount.value), annualRate = Number(loanEl.loanRate.value), years = Number(loanEl.loanYears.value);
+  document.getElementById("loanAmountOut").textContent = fullMoney(P);
+  document.getElementById("loanRateOut").textContent = annualRate.toFixed(2) + "%";
+  document.getElementById("loanYearsOut").textContent = years + " yrs";
+
+  const r = annualRate / 100 / 12, n = years * 12;
+  const emi = r > 0 ? (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1) : P / n;
+  const totalPayment = emi * n;
+  const totalInterest = Math.max(0, totalPayment - P);
+
+  document.getElementById("loanEmi").textContent = fullMoney(emi);
+  document.getElementById("loanInterest").textContent = money(totalInterest);
+  document.getElementById("loanTotal").textContent = money(totalPayment);
+}
+loanIds.forEach(id => loanEl[id].addEventListener("input", computeLoan));
+
+/* ---------------- BONUS TOOL: Goal-Based Savings Planner ---------------- */
+const goalIds = ["goalAmount", "goalYears", "goalReturn"];
+const goalEl = Object.fromEntries(goalIds.map(id => [id, document.getElementById(id)]));
+function computeGoal() {
+  const fv = Number(goalEl.goalAmount.value), years = Number(goalEl.goalYears.value), retPct = Number(goalEl.goalReturn.value);
+  document.getElementById("goalAmountOut").textContent = fullMoney(fv);
+  document.getElementById("goalYearsOut").textContent = years + " yrs";
+  document.getElementById("goalReturnOut").textContent = retPct.toFixed(1) + "%";
+
+  const n = years * 12, r = retPct / 100 / 12;
+  const monthly = r > 0 ? fv / (((Math.pow(1 + r, n) - 1) / r) * (1 + r)) : fv / n;
+
+  document.getElementById("goalMonthly").textContent = fullMoney(monthly);
+  document.getElementById("goalInvested").textContent = money(monthly * n);
+}
+goalIds.forEach(id => goalEl[id].addEventListener("input", computeGoal));
+
+/* ---------------- BONUS TOOL: Old vs New Tax Regime ---------------- */
+let regimeChart;
+function computeRegime() {
+  const gross = Number(el.income.value);
+  const deduct = Number(document.getElementById("taxDeduct").value);
+  document.getElementById("taxDeductOut").textContent = fullMoney(deduct);
+
+  const oldTax = taxOldRegime(gross, deduct);
+  const newTax = taxNewRegime(gross);
+  const better = oldTax === newTax ? "Both regimes cost the same for these numbers." : (oldTax < newTax ? `Old regime saves you ${fullMoney(newTax - oldTax)} here — your 80C investments are pulling their weight.` : `New regime saves you ${fullMoney(oldTax - newTax)} here, even without any 80C investing.`);
+  document.getElementById("regimeVerdict").textContent = better;
+
+  if (regimeChart) regimeChart.destroy();
+  regimeChart = new Chart(document.getElementById("regimeChart"), {
+    type: "bar",
+    data: { labels: ["Old Regime Tax", "New Regime Tax"], datasets: [{ data: [oldTax, newTax], backgroundColor: ["#8B5CF6", "#2F6FED"], borderColor: "#241F35", borderWidth: 2 }] },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: "y", plugins: { legend: { display: false } }, scales: { x: { ticks: { callback: v => money(v), font: { family: "Space Mono", size: 10 } }, grid: { color: "#EFE7D3" } }, y: { grid: { display: false }, ticks: { font: { family: "Nunito", weight: "bold", size: 11 } } } } }
+  });
+}
+document.getElementById("taxDeduct").addEventListener("input", computeRegime);
+el.income.addEventListener("input", computeRegime);
+
+computeSip(); computeLoan(); computeGoal(); computeRegime();
 
 document.getElementById("showReport").addEventListener("click", () => {
   reportSection.classList.toggle("hidden");
